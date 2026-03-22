@@ -179,9 +179,31 @@ def train(args):
     }
 
     best_val_uar = 0.0
+    start_epoch = 0
+    last_path = os.path.join(save_dir, 'last_model.pth')
+
+    # Resume from last checkpoint if requested
+    if args.resume:
+        resume_path = os.path.join(save_dir, 'last_model.pth')
+        if os.path.isfile(resume_path):
+            logging.info(f'Resuming from checkpoint: {resume_path}')
+            ckpt = torch.load(resume_path, map_location=use_device, weights_only=False)
+            model_state = ckpt['model']
+            # Handle DataParallel wrapper
+            if hasattr(model, 'module'):
+                model.module.load_state_dict(model_state)
+            else:
+                model.load_state_dict(model_state)
+            optimizer.load_state_dict(ckpt['optimizer'])
+            start_epoch = ckpt['epoch']          # already-completed epochs
+            best_val_uar = ckpt.get('val_uar', 0.0)
+            logging.info(f'Resumed at epoch {start_epoch}/{num_epochs}, best UAR so far: {best_val_uar:.4f}')
+        else:
+            logging.warning(f'--resume set but no checkpoint found at {resume_path}. Starting from scratch.')
+
     time_begin = time.time()
 
-    for epoch in range(num_epochs):
+    for epoch in range(start_epoch, num_epochs):
         logging.info('=' * 50)
         logging.info(f'Epoch {epoch + 1}/{num_epochs}, lr: {optimizer.param_groups[0]["lr"]:.6f}')
         logging.info('=' * 50)
@@ -308,6 +330,8 @@ if __name__ == '__main__':
     parser_train.add_argument('--layer', nargs='*')
     parser_train.add_argument('--save_dir', type=str, default='../save_model',
                               help='Directory to save best/last models and plots')
+    parser_train.add_argument('--resume', action='store_true',
+                              help='Resume training from last_model.pth in save_dir')
 
     # Parse arguments
     args = parser.parse_args()

@@ -1,0 +1,4 @@
+FluSense audio/
+.venv
+workspace/audio_flusense/
+workspace/features_flusense.hdf5

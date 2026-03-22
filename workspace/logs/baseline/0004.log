@@ -1,0 +1,10 @@
+Sun, 22 Mar 2026 20:48:01 main.py[line:107] INFO Namespace(mode='train', workspace='workspace', flusense=True, learning_rate=0.001, batch_size=32, arch='logmel', backbone='baseline', method='embedding', layer=None, save_dir='save_model', resume=True)
+Sun, 22 Mar 2026 20:48:01 main.py[line:117] INFO Using device: cuda
+Sun, 22 Mar 2026 20:48:01 main.py[line:121] INFO Dataset size: 15116
+Sun, 22 Mar 2026 20:48:16 main.py[line:134] INFO Train: 12092, Val: 3024
+Sun, 22 Mar 2026 20:48:16 main.py[line:151] INFO Model: baseline, Parameters: 1,028,937
+Sun, 22 Mar 2026 20:48:22 main.py[line:188] INFO Resuming from checkpoint: save_model\last_model.pth
+Sun, 22 Mar 2026 20:48:22 main.py[line:199] INFO Resumed at epoch 30/30, best UAR so far: 0.6446
+Sun, 22 Mar 2026 20:48:22 main.py[line:304] INFO ==================================================
+Sun, 22 Mar 2026 20:48:22 main.py[line:305] INFO Training completed in 0m 0s
+Sun, 22 Mar 2026 20:48:22 main.py[line:306] INFO Best Val UAR: 0.6446

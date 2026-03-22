@@ -1,0 +1,3 @@
+Sun, 22 Mar 2026 19:57:17 main.py[line:107] INFO Namespace(mode='train', workspace='workspace', flusense=True, learning_rate=0.001, batch_size=32, arch='logmel', backbone='vgg', method='embedding', layer=None, save_dir='save_model', resume=False)
+Sun, 22 Mar 2026 19:57:17 main.py[line:117] INFO Using device: cuda
+Sun, 22 Mar 2026 19:57:17 main.py[line:121] INFO Dataset size: 15116

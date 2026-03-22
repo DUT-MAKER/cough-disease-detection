@@ -1,0 +1,5 @@
+Sun, 22 Mar 2026 13:02:21 main.py[line:107] INFO Namespace(mode='train', workspace='workspace', flusense=True, learning_rate=0.001, batch_size=32, arch='logmel', backbone='vgg', method='embedding', layer=None, save_dir='save_model')
+Sun, 22 Mar 2026 13:02:21 main.py[line:117] INFO Using device: cpu
+Sun, 22 Mar 2026 13:02:21 main.py[line:121] INFO Dataset size: 15116
+Sun, 22 Mar 2026 13:02:45 main.py[line:134] INFO Train: 12092, Val: 3024
+Sun, 22 Mar 2026 13:02:45 main.py[line:151] INFO Model: vgg, Parameters: 1,147,593
