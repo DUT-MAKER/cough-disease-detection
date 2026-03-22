@@ -1,1 +1,1 @@
-# detect-cough-disease-with-CovNet
+# detect-cough-disease-with-CovNet`
