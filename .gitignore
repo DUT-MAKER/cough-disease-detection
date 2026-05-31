@@ -2,3 +2,35 @@ FluSense audio/
 .venv
 workspace/audio_flusense/
 workspace/features_flusense.hdf5
+public_dataset_v3/coughvid_20211012/*
+
+# Môi trường ảo & Caches
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# File nén dataset gốc
+*.zip
+*.tar.gz
+*.tgz
+
+# Thư mục chứa dữ liệu âm thanh thô & đã xử lý
+public_dataset_v3/
+breathe_mouth/
+breathe_nose/
+cough/
+Sound-Dr/
+tabular_form/
+workspace/
+
+# Các file đặc trưng trung gian dung lượng lớn
+*.hdf5
+*.npy
+*.npz
+
+# Thư mục lưu trữ trọng số mô hình đã huấn luyện
+save_*/
+save_mobilenet/
+save_resnet/
+save_vgg/

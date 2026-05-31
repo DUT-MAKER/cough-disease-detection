@@ -9,7 +9,7 @@ overlap = 256
 mel_bins = 64
 
 device = 'cuda'
-num_epochs = 30
+num_epochs = 1
 gamma = 0.4
 patience = 4
 step = 10
@@ -20,3 +20,8 @@ classes_num_flusense = 9
 exclude = ['burp', 'vomit', 'hiccup', 'snore', 'wheeze']
 valid_labels = ['cough', 'speech', 'etc', 'silence', 'sneeze', 'gasp', 'breathe', 'sniffle', 'throat-clearing']
 flusense_weights = [63.38, 2.45, 1.0, 47.78, 13.49, 27.89, 24.93, 0.91, 128.05]
+
+# ── Respiratory Disease Classification ──────────────────────────────────────
+# 0-Healthy, 1-Asthma, 2-COPD, 3-Pneumonia, 4-COVID
+RESP_CLASSES = ['Healthy', 'Asthma', 'COPD', 'Pneumonia', 'COVID']
+classes_num_respiratory = len(RESP_CLASSES)   # 5

@@ -105,16 +105,25 @@ def write_predictions(filenames_unique, predicts_unique, truth_csv, output_csv):
     f.close()
 
 
-def scoring(truth, pred, y_scores, flusense):
+def scoring(truth, pred, y_scores, num_classes=2):
+    """Compute UAR, AUC, and confusion matrix.
+
+    Args:
+        truth       : list of ground-truth integer labels
+        pred        : list of predicted integer labels
+        y_scores    : list of probability vectors (n_samples, n_classes)
+        num_classes : number of classes (2 for binary, N for multiclass)
+    """
     y_scores = np.asarray(y_scores)
-    uar = recall_score(truth, pred, average="macro")
-    if flusense:
+    uar = recall_score(truth, pred, average="macro", zero_division=0)
+    if num_classes > 2:
         auc = roc_auc_score(truth, y_scores, average="macro", multi_class="ovo")
-        confusion_mat = confusion_matrix(truth, pred, labels=list(range(9)))
+        confusion_mat = confusion_matrix(truth, pred, labels=list(range(num_classes)))
     else:
         auc = roc_auc_score(truth, y_scores[:, 1], average="macro")
         confusion_mat = confusion_matrix(truth, pred, labels=list(range(2)))
     return confusion_mat, uar, auc
+
 
 
 class Mixup(object):

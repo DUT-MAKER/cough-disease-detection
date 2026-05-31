@@ -1,8 +1,0 @@
-Sun, 22 Mar 2026 20:54:55 main.py[line:107] INFO Namespace(mode='train', workspace='workspace', flusense=True, learning_rate=0.001, batch_size=32, arch='logmel', backbone='resnet', method='embedding', layer=None, save_dir='save_resnet', resume=False)
-Sun, 22 Mar 2026 20:54:55 main.py[line:117] INFO Using device: cuda
-Sun, 22 Mar 2026 20:54:55 main.py[line:121] INFO Dataset size: 15116
-Sun, 22 Mar 2026 20:55:09 main.py[line:134] INFO Train: 12092, Val: 3024
-Sun, 22 Mar 2026 20:55:09 main.py[line:151] INFO Model: resnet, Parameters: 1,154,889
-Sun, 22 Mar 2026 20:55:10 main.py[line:207] INFO ==================================================
-Sun, 22 Mar 2026 20:55:10 main.py[line:208] INFO Epoch 1/30, lr: 0.001000
-Sun, 22 Mar 2026 20:55:10 main.py[line:209] INFO ==================================================

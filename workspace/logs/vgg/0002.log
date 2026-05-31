@@ -1,8 +1,0 @@
-Sun, 22 Mar 2026 19:03:15 main.py[line:107] INFO Namespace(mode='train', workspace='workspace', flusense=True, learning_rate=0.001, batch_size=32, arch='logmel', backbone='vgg', method='embedding', layer=None, save_dir='../save_model')
-Sun, 22 Mar 2026 19:03:15 main.py[line:117] INFO Using device: cpu
-Sun, 22 Mar 2026 19:03:15 main.py[line:121] INFO Dataset size: 15116
-Sun, 22 Mar 2026 19:03:37 main.py[line:134] INFO Train: 12092, Val: 3024
-Sun, 22 Mar 2026 19:03:37 main.py[line:151] INFO Model: vgg, Parameters: 1,147,593
-Sun, 22 Mar 2026 19:03:39 main.py[line:185] INFO ==================================================
-Sun, 22 Mar 2026 19:03:39 main.py[line:186] INFO Epoch 1/30, lr: 0.001000
-Sun, 22 Mar 2026 19:03:39 main.py[line:187] INFO ==================================================

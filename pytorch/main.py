@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 
 from utils.config import (num_epochs, gamma, patience, device,
                           flusense_weights, classes_num_flusense, classes_num,
+                          classes_num_respiratory, RESP_CLASSES,
                           split_ratio, random_seed)
-from utils.data_generator import JSTSP2021, split_compare_dataset, dev_fold_dataset
+from utils.data_generator import JSTSP2021, split_compare_dataset, dev_fold_dataset, RespiratoryDataset
 import utils.utilities as utt
 from utils import model_functions as mf
 from pytorch.models import BaselineCnn, Vggish, ResNet, MobileNet
@@ -27,6 +28,21 @@ from pytorch.models import BaselineCnn, Vggish, ResNet, MobileNet
 def get_flusense_model(backbone):
     """Create a fresh model for FluSense 9-class classification."""
     n_classes = classes_num_flusense
+    if 'baseline' in backbone:
+        return BaselineCnn(n_classes)
+    elif 'vgg' in backbone:
+        return Vggish(n_classes)
+    elif 'resnet' in backbone:
+        return ResNet(n_classes)
+    elif 'mobile' in backbone:
+        return MobileNet(n_classes)
+    else:
+        raise Exception(f'Invalid backbone: {backbone}')
+
+
+def get_respiratory_model(backbone):
+    """Create a fresh model for respiratory 5-class classification."""
+    n_classes = classes_num_respiratory
     if 'baseline' in backbone:
         return BaselineCnn(n_classes)
     elif 'vgg' in backbone:
@@ -94,6 +110,7 @@ def train(args):
     batch_size = args.batch_size
     arch = args.arch
     flusense = args.flusense
+    respiratory = getattr(args, 'respiratory', False)
     backbone = args.backbone
     num_workers = 0  # Use 0 for Windows compatibility
     save_dir = args.save_dir
@@ -109,6 +126,8 @@ def train(args):
     # HDF5 path
     if flusense:
         hdf5_path = os.path.join(workspace, 'features_flusense.hdf5')
+    elif respiratory:
+        pass  # RespiratoryDataset reads CSV directly
     else:
         hdf5_path = os.path.join(workspace, 'features_compare.hdf5')
 
@@ -117,19 +136,37 @@ def train(args):
     logging.info(f'Using device: {use_device}')
 
     # Dataset
-    dataset = JSTSP2021(hdf5_path=hdf5_path, flusense=flusense)
-    logging.info(f'Dataset size: {len(dataset)}')
+    if respiratory:
+        import os as _os
+        _sounddr_data_dir = _os.path.join(
+            _os.path.dirname(_os.path.abspath(__file__)), '..', 'Sound-Dr', 'sounddr_data'
+        )
+        _sounddr_csv = _os.path.join(_sounddr_data_dir, 'data.csv')
+        _sounddr_csv_aug = _os.path.join(_sounddr_data_dir, 'data_augmented.csv')
+        _csv_to_use = _sounddr_csv_aug if _os.path.isfile(_sounddr_csv_aug) else _sounddr_csv
 
-    # Split dataset
-    if flusense:
-        # Use stratified random split for FluSense data
+        logging.info(f'Respiratory CSV: {_csv_to_use}')
+        dataset = RespiratoryDataset(data_csv=_csv_to_use, audio_root=_sounddr_data_dir)
+        logging.info(f'RespiratoryDataset size: {len(dataset)}')
+        train_dataset, val_dataset = dev_fold_dataset(
+            dataset, split_ratio=split_ratio, shuffle=True, random_seed=random_seed
+        )
+        weights_tensor = torch.tensor(dataset.class_weights, dtype=torch.float32).to(use_device)
+        num_classes = classes_num_respiratory
+    elif flusense:
+        dataset = JSTSP2021(hdf5_path=hdf5_path, flusense=flusense)
+        logging.info(f'Dataset size: {len(dataset)}')
         train_dataset, val_dataset = dev_fold_dataset(
             dataset, split_ratio=split_ratio, shuffle=True, random_seed=random_seed
         )
         weights_tensor = torch.tensor(flusense_weights, dtype=torch.float32).to(use_device)
+        num_classes = classes_num_flusense
     else:
+        dataset = JSTSP2021(hdf5_path=hdf5_path, flusense=flusense)
+        logging.info(f'Dataset size: {len(dataset)}')
         val_dataset, train_dataset, _, weights = split_compare_dataset(dataset)
         weights_tensor = torch.tensor(weights, dtype=torch.float32).to(use_device)
+        num_classes = classes_num
 
     logging.info(f'Train: {len(train_dataset)}, Val: {len(val_dataset)}')
 
@@ -143,7 +180,9 @@ def train(args):
     }
 
     # Model
-    if flusense:
+    if respiratory:
+        model = get_respiratory_model(backbone)
+    elif flusense:
         model = get_flusense_model(backbone)
     else:
         model = mf.get_network(backbone)
@@ -249,7 +288,7 @@ def train(args):
             predicts = list(itertools.chain(*predicts))
             truth = list(itertools.chain(*truth))
 
-            confusion_mat, uar, auc = utt.scoring(truth, predicts, y_scores, flusense)
+            confusion_mat, uar, auc = utt.scoring(truth, predicts, y_scores, num_classes=num_classes)
 
             epoch_metrics[phase] = {'loss': epoch_loss, 'uar': uar, 'auc': auc}
 
@@ -320,6 +359,8 @@ if __name__ == '__main__':
     parser_train = subparsers.add_parser('train')
     parser_train.add_argument('--workspace', type=str, default='../workspace')
     parser_train.add_argument('--flusense', action='store_true')
+    parser_train.add_argument('--respiratory', action='store_true',
+                              help='Train 5-class respiratory disease classifier using Sound-Dr data')
     parser_train.add_argument('--learning_rate', type=float, default=0.001)
     parser_train.add_argument('--batch_size', type=int, default=16)
     parser_train.add_argument('--arch', type=str, default='logmel')

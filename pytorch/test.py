@@ -22,6 +22,26 @@ import embedding as ebd
 import transfer
 import models as m
 
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+_DEFAULT_WORKSPACE = os.path.join(_REPO_ROOT, 'workspace')
+_DEFAULT_CHECKPOINT = os.path.join(_REPO_ROOT, 'save_mobilenet', 'best_model.pth')
+
+
+def _infer_num_classes_from_state_dict(state_dict):
+    for key in ('fc1.weight', 'fc_final.weight'):
+        if key in state_dict:
+            return int(state_dict[key].shape[0])
+    raise ValueError(
+        'Cannot infer num_classes from checkpoint (expected fc1.weight or fc_final.weight).'
+    )
+
+
+def _load_checkpoint_state(model_path, map_location):
+    blob = torch.load(model_path, map_location, weights_only=False)
+    if isinstance(blob, dict) and 'model' in blob:
+        return blob['model']
+    return blob
+
 
 def test(args):
     workspace = args.workspace
@@ -62,7 +82,9 @@ def test(args):
         num = conv_to_num(layer)
 
     checkpoint_dir = get_checkpoint_dir(method, workspace, backbone, learning_rate, num)
-    model = get_test_network(checkpoint_dir, method, backbone, layer)
+    model = get_test_network(
+        checkpoint_dir, method, backbone, layer, checkpoint_path=args.checkpoint
+    )
     # Dataset
     dataset = JSTSP2021(hdf5_path=hdf5_path, flusense=False)
 
@@ -147,7 +169,7 @@ def test_performance(dataloader, arch, model, fold=0):
     return auc, uar
 
 
-def get_test_network(checkpoint_dir, method, backbone, layer):
+def get_test_network(checkpoint_dir, method, backbone, layer, checkpoint_path=None):
     map_location = torch.device(device)
 
     if 'embedding' in method:
@@ -164,9 +186,15 @@ def get_test_network(checkpoint_dir, method, backbone, layer):
         model.load_state_dict(check)
 
     elif 'single' in method:
-        model_path = get_model_path(checkpoint_dir)
-        model = get_network(backbone)
-        model.load_state_dict(torch.load(model_path, map_location)['model'])
+        model_path = checkpoint_path if checkpoint_path else get_model_path(checkpoint_dir)
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError(
+                f'Missing checkpoint: {model_path}. Train a model or pass --checkpoint.'
+            )
+        state = _load_checkpoint_state(model_path, map_location)
+        num_classes = _infer_num_classes_from_state_dict(state)
+        model = get_network(backbone, num_classes=num_classes)
+        model.load_state_dict(state)
 
     logging.info('GPU number: {}'.format(torch.cuda.device_count()))
     model = torch.nn.DataParallel(model)
@@ -177,15 +205,16 @@ def get_test_network(checkpoint_dir, method, backbone, layer):
     return model
 
 
-def get_network(backbone):
+def get_network(backbone, num_classes=None):
+    n = num_classes if num_classes is not None else classes_num
     if 'baseline' in backbone:
-        model = m.BaselineCnn(classes_num)
+        model = m.BaselineCnn(n)
     elif 'vgg' in backbone:
-        model = m.Vggish(classes_num)
+        model = m.Vggish(n)
     elif 'resnet' in backbone:
-        model = m.ResNet(classes_num)
+        model = m.ResNet(n)
     elif 'mobilenet' in backbone:
-        model = m.MobileNet(classes_num)
+        model = m.MobileNet(n)
     return model
 
 
@@ -217,11 +246,17 @@ if __name__ == '__main__':
 
     # Test
     parser_test = subparsers.add_parser('test')
-    parser_test.add_argument('--workspace', type=str, default='../../workspace')
+    parser_test.add_argument('--workspace', type=str, default=_DEFAULT_WORKSPACE)
+    parser_test.add_argument(
+        '--checkpoint',
+        type=str,
+        default=_DEFAULT_CHECKPOINT,
+        help='Path to .pth for method single (default: save_mobilenet/best_model.pth under repo root).',
+    )
     parser_test.add_argument('--batch_size', type=int, default=16)
     parser_test.add_argument('--arch', type=str, default='logmel')
     parser_test.add_argument('--test_dataset', type=str, choices=['dicova', 'compare'], default='dicova')
-    parser_test.add_argument('--backbone', type=str, default='baseline')
+    parser_test.add_argument('--backbone', type=str, default='mobilenet')
     parser_test.add_argument('--method', type=str, choices=['transfer', 'embedding', 'single'], default='single')
     # parser_test.add_argument('--embedding', type=str, default='conv1')
     parser_test.add_argument('--learning_rate', type=float, default=0.001)

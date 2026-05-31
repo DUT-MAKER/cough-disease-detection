@@ -1,0 +1,1 @@
+ python predict_audio.py --audio_file "workspace/audio_flusense/aeWiKB1oEKo_0_000-10_000.wav" --model_path save_mobilenet/best_model.pth --backbone mobilenet
